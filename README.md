@@ -1,0 +1,2 @@
+# ASP.NET-MVC-Client-with-Microservices-Architecture
+TechStore is a scalable e-commerce web application built with ASP.NET MVC and a microservices-based backend. Users can browse products, manage carts, place orders, and process secure payments. Independent services for products, orders, authentication, and payments communicate via REST APIs, ensuring modularity, scalability, and efficientdeployment.
