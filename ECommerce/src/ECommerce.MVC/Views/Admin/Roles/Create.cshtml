@@ -1,0 +1,131 @@
+@model CreateRoleViewModel
+@{
+    ViewData["Title"] = "Create Role";
+}
+
+@section Styles {
+<style>
+    .admin-sidebar {
+        width: 220px; min-height: calc(100vh - 60px);
+        background: #1e1b4b; position: fixed; top: 60px; left: 0; z-index: 100;
+        padding-top: 1rem;
+    }
+    .admin-sidebar .nav-link { color: #a5b4fc; padding: .6rem 1.2rem; border-radius: 8px; margin: 2px 8px; }
+    .admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active { background: #6C63FF; color: #fff; }
+    .admin-content { margin-left: 220px; }
+    .form-card { border-radius: 16px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+    .input-group-text { background: #f8f8ff; border-right: none; }
+    .form-control, .form-select { border-left: none; }
+    .form-control:focus { border-color: #6C63FF; box-shadow: 0 0 0 .2rem rgba(108,99,255,.15); }
+    .preview-badge { font-size: .95rem; padding: .4em .9em; border-radius: 20px; display: inline-block; margin-top: .5rem; }
+</style>
+}
+
+<div class="admin-sidebar d-none d-lg-block">
+    <div class="px-3 pb-2 mb-2 border-bottom border-indigo-800">
+        <span class="text-white fw-bold"><i class="bi bi-shield-lock-fill me-2" style="color:#6C63FF"></i>Admin Panel</span>
+    </div>
+    <nav class="nav flex-column">
+        <a class="nav-link" href="@Url.Action("Index","AdminUsers")">
+            <i class="bi bi-people me-2"></i>Users
+        </a>
+        <a class="nav-link active" href="@Url.Action("Index","AdminRoles")">
+            <i class="bi bi-tags me-2"></i>Roles
+        </a>
+        <hr class="border-secondary mx-3 my-2" />
+        <a class="nav-link" href="@Url.Action("Index","Home")">
+            <i class="bi bi-shop me-2"></i>Back to Store
+        </a>
+    </nav>
+</div>
+
+<div class="admin-content">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="@Url.Action("Index","AdminRoles")" class="text-decoration-none" style="color:#6C63FF">Roles</a></li>
+            <li class="breadcrumb-item active">Create Role</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card form-card p-4">
+                <h5 class="fw-bold mb-1">
+                    <i class="bi bi-plus-circle me-2" style="color:#6C63FF"></i>Create New Role
+                </h5>
+                <p class="text-muted small mb-4">
+                    Role name is stored in JWT claims and used with
+                    <code>[Authorize(Roles="...")]</code> on every API controller.
+                </p>
+
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert alert-danger py-2 small mb-3">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        @Html.ValidationSummary(false, null, new { @class = "mb-0" })
+                    </div>
+                }
+
+                <form asp-action="Create" asp-controller="AdminRoles" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-4">
+                        <label asp-for="Name" class="form-label small fw-medium">Role Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-tag text-muted"></i></span>
+                            <input asp-for="Name" class="form-control" placeholder="e.g. Analyst"
+                                   id="roleNameInput" maxlength="50" />
+                        </div>
+                        <div class="form-text">Start with a letter. Letters, digits, and underscores only.</div>
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+
+                        <!-- Live badge preview -->
+                        <div class="mt-2" id="previewWrap" style="display:none">
+                            <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Preview</div>
+                            <span class="preview-badge bg-primary bg-opacity-15 text-primary border border-primary border-opacity-25" id="previewBadge"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Description" class="form-label small fw-medium">Description</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-card-text text-muted"></i></span>
+                            <input asp-for="Description" class="form-control"
+                                   placeholder="Brief description of what this role can do" maxlength="200" />
+                        </div>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="alert alert-info py-2 small mb-4">
+                        <i class="bi bi-info-circle me-1"></i>
+                        The <strong>Customer</strong> role is automatically assigned on registration.
+                        New roles start as <strong>active</strong> and can be assigned immediately.
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn text-white fw-medium px-4" style="background:#6C63FF">
+                            <i class="bi bi-plus-lg me-1"></i>Create Role
+                        </button>
+                        <a href="@Url.Action("Index","AdminRoles")" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.getElementById('roleNameInput').addEventListener('input', function () {
+        const val   = this.value.trim();
+        const wrap  = document.getElementById('previewWrap');
+        const badge = document.getElementById('previewBadge');
+        if (val) {
+            wrap.style.display = 'block';
+            badge.textContent  = val;
+        } else {
+            wrap.style.display = 'none';
+        }
+    });
+</script>
+}

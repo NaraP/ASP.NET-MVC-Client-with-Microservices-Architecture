@@ -1,0 +1,283 @@
+@model EditUserViewModel
+@{
+    ViewData["Title"] = "Edit User";
+    var roleColors = new Dictionary<string, string> {
+        ["Admin"]="danger",["Manager"]="success",["Support"]="warning",["Customer"]="primary"
+    };
+    var unassigned = Model.AvailableRoles.Where(r => !Model.CurrentRoles.Contains(r.Name)).ToList();
+}
+
+@section Styles {
+<style>
+    .admin-sidebar {
+        width: 220px; min-height: calc(100vh - 60px);
+        background: #1e1b4b; position: fixed; top: 60px; left: 0; z-index: 100;
+        padding-top: 1rem;
+    }
+    .admin-sidebar .nav-link { color: #a5b4fc; padding: .6rem 1.2rem; border-radius: 8px; margin: 2px 8px; }
+    .admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active { background: #6C63FF; color: #fff; }
+    .admin-sidebar .nav-link i { width: 20px; }
+    .admin-content { margin-left: 220px; }
+    .section-label { font-size: .7rem; font-weight: 700; letter-spacing: .08em; color: #6C63FF; text-transform: uppercase; }
+    .input-group-text { background: #f8f8ff; border-right: none; }
+    .form-control, .form-select { border-left: none; }
+    .form-control:focus, .form-select:focus { border-color: #6C63FF; box-shadow: 0 0 0 .2rem rgba(108,99,255,.15); }
+    .role-pill { display:inline-flex; align-items:center; gap:.4rem; border-radius:20px; padding:.3em .8em; font-size:.8rem; font-weight:600; }
+    .user-avatar-lg { width:52px; height:52px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:1.2rem; color:#fff; }
+</style>
+}
+
+<div class="admin-sidebar d-none d-lg-block">
+    <div class="px-3 pb-2 mb-2 border-bottom border-indigo-800">
+        <span class="text-white fw-bold"><i class="bi bi-shield-lock-fill me-2" style="color:#6C63FF"></i>Admin Panel</span>
+    </div>
+    <nav class="nav flex-column">
+        <a class="nav-link active" href="@Url.Action("Index","AdminUsers")">
+            <i class="bi bi-people me-2"></i>Users
+        </a>
+        <a class="nav-link" href="@Url.Action("Index","AdminRoles")">
+            <i class="bi bi-tags me-2"></i>Roles
+        </a>
+        <hr class="border-secondary mx-3 my-2" />
+        <a class="nav-link" href="@Url.Action("Index","Home")">
+            <i class="bi bi-shop me-2"></i>Back to Store
+        </a>
+    </nav>
+</div>
+
+<div class="admin-content">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="@Url.Action("Index","AdminUsers")" class="text-decoration-none" style="color:#6C63FF">Users</a></li>
+            <li class="breadcrumb-item active">Edit — @Model.FirstName @Model.LastName</li>
+        </ol>
+    </nav>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+
+        <!-- ── Left: Profile info ── -->
+        <div class="col-lg-7">
+            <div class="card p-4" style="border-radius:16px;border:none;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+
+                <!-- User identity header -->
+                <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                    @{
+                        var primary = Model.CurrentRoles.FirstOrDefault() ?? "Customer";
+                        var avatarColor = roleColors.GetValueOrDefault(primary, "secondary");
+                        var initials = string.Concat((Model.FirstName + " " + Model.LastName)
+                            .Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString() : ""));
+                    }
+                    <span class="user-avatar-lg bg-@avatarColor">@initials</span>
+                    <div>
+                        <h6 class="fw-bold mb-0">@Model.FirstName @Model.LastName</h6>
+                        <div class="text-muted small">@Model.Email</div>
+                        <div class="text-muted" style="font-size:.7rem">ID: @Model.UserId</div>
+                    </div>
+                    <div class="ms-auto">
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25">
+                                <i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>Active
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-25">
+                                <i class="bi bi-circle me-1" style="font-size:.5rem"></i>Inactive
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <h6 class="section-label mb-3">Profile</h6>
+
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert alert-danger py-2 small mb-3">
+                        @Html.ValidationSummary(false, null, new { @class = "mb-0" })
+                    </div>
+                }
+
+                <form asp-action="Edit" asp-controller="AdminUsers" asp-route-id="@Model.UserId"
+                      method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="UserId" />
+                    <input type="hidden" asp-for="Email" />
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label small fw-medium"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
+                                <input asp-for="FirstName" class="form-control" />
+                            </div>
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label small fw-medium"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
+                                <input asp-for="LastName" class="form-control" />
+                            </div>
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-7">
+                            <label class="form-label small fw-medium">Email <span class="text-muted fw-normal">(read-only)</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
+                                <input type="text" class="form-control bg-light" value="@Model.Email" readonly />
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <label asp-for="PhoneNumber" class="form-label small fw-medium"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-telephone text-muted"></i></span>
+                                <input asp-for="PhoneNumber" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                            <label asp-for="IsActive" class="form-check-label small fw-medium">Account is Active</label>
+                        </div>
+                        <div class="form-text">Inactive users cannot log in.</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn text-white fw-medium" style="background:#6C63FF">
+                            <i class="bi bi-check2 me-1"></i>Save Changes
+                        </button>
+                        <a href="@Url.Action("Index","AdminUsers")" class="btn btn-outline-secondary">Cancel</a>
+                        <a href="@Url.Action("Details","AdminUsers",new{id=Model.UserId})"
+                           class="btn btn-outline-secondary ms-auto">
+                            <i class="bi bi-eye me-1"></i>View Details
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Meta info -->
+                <div class="row mt-4 pt-3 border-top text-muted small">
+                    <div class="col-6">
+                        <i class="bi bi-calendar3 me-1"></i>Joined @Model.CreatedAt.ToString("MMM d, yyyy")
+                    </div>
+                    <div class="col-6 text-end">
+                        <i class="bi bi-clock me-1"></i>
+                        Last login: @(Model.LastLoginAt.HasValue ? Model.LastLoginAt.Value.ToString("MMM d, yyyy") : "Never")
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Right: Role management ── -->
+        <div class="col-lg-5">
+            <div class="card p-4 mb-3" style="border-radius:16px;border:none;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-tags me-2" style="color:#6C63FF"></i>Current Roles
+                </h6>
+
+                @if (!Model.CurrentRoles.Any())
+                {
+                    <p class="text-muted small fst-italic">No roles assigned.</p>
+                }
+                else
+                {
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        @foreach (var role in Model.CurrentRoles)
+                        {
+                            var c = roleColors.GetValueOrDefault(role, "secondary");
+                            <span class="role-pill bg-@c bg-opacity-10 text-@c border border-@c border-opacity-25">
+                                <i class="bi bi-shield-check" style="font-size:.75rem"></i>@role
+                                <!-- Remove form -->
+                                <form method="post" action="@Url.Action("RemoveRole","AdminUsers")"
+                                      class="d-inline" id="remove-@role">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="UserId" value="@Model.UserId" />
+                                    <input type="hidden" name="RoleName" value="@role" />
+                                    <input type="hidden" name="returnUrl" value="/Admin/Users/Edit/@Model.UserId" />
+                                    <button type="submit" class="btn-close btn-close-sm ms-1 p-0"
+                                            style="font-size:.55rem;opacity:.6"
+                                            onclick="return confirm('Remove @role from this user?')"
+                                            title="Remove @role"></button>
+                                </form>
+                            </span>
+                        }
+                    </div>
+                }
+
+                <hr />
+
+                <h6 class="fw-medium small text-muted mb-2">
+                    <i class="bi bi-plus-circle me-1"></i>Assign Role
+                </h6>
+
+                @if (!unassigned.Any())
+                {
+                    <p class="text-muted small fst-italic">All available roles are already assigned.</p>
+                }
+                else
+                {
+                    <form method="post" action="@Url.Action("AssignRole","AdminUsers")">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="UserId" value="@Model.UserId" />
+                        <input type="hidden" name="returnUrl" value="/Admin/Users/Edit/@Model.UserId" />
+                        <div class="input-group">
+                            <select name="RoleName" class="form-select form-select-sm">
+                                <option value="">Select a role…</option>
+                                @foreach (var r in unassigned)
+                                {
+                                    <option value="@r.Name">@r.Name</option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-sm text-white" style="background:#6C63FF">
+                                <i class="bi bi-plus-lg"></i> Assign
+                            </button>
+                        </div>
+                    </form>
+                }
+            </div>
+
+            <!-- Quick activate / deactivate card -->
+            <div class="card p-4" style="border-radius:16px;border:none;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+                <h6 class="fw-bold mb-3"><i class="bi bi-toggle-on me-2" style="color:#6C63FF"></i>Account Status</h6>
+                @if (Model.IsActive)
+                {
+                    <p class="text-muted small mb-3">This account is <strong class="text-success">active</strong>. The user can log in.</p>
+                    <form method="post" action="@Url.Action("Deactivate","AdminUsers")">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="userId" value="@Model.UserId" />
+                        <input type="hidden" name="returnUrl" value="/Admin/Users/Edit/@Model.UserId" />
+                        <button class="btn btn-sm btn-outline-warning w-100"
+                                onclick="return confirm('Deactivate this user?')">
+                            <i class="bi bi-person-dash me-1"></i>Deactivate Account
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted small mb-3">This account is <strong class="text-warning">inactive</strong>. The user cannot log in.</p>
+                    <form method="post" action="@Url.Action("Activate","AdminUsers")">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="userId" value="@Model.UserId" />
+                        <input type="hidden" name="returnUrl" value="/Admin/Users/Edit/@Model.UserId" />
+                        <button class="btn btn-sm btn-outline-success w-100">
+                            <i class="bi bi-person-check me-1"></i>Activate Account
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

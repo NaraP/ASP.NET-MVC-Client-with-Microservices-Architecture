@@ -1,0 +1,233 @@
+@model CreateUserViewModel
+@{
+    ViewData["Title"] = "Create User";
+}
+
+@section Styles {
+<style>
+    .admin-sidebar {
+        width: 220px; min-height: calc(100vh - 60px);
+        background: #1e1b4b; position: fixed; top: 60px; left: 0; z-index: 100;
+        padding-top: 1rem;
+    }
+    .admin-sidebar .nav-link { color: #a5b4fc; padding: .6rem 1.2rem; border-radius: 8px; margin: 2px 8px; }
+    .admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active { background: #6C63FF; color: #fff; }
+    .admin-sidebar .nav-link i { width: 20px; }
+    .admin-content { margin-left: 220px; }
+    .form-card { border-radius: 16px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+    .section-label { font-size: .7rem; font-weight: 700; letter-spacing: .08em; color: #6C63FF; text-transform: uppercase; }
+    .input-group-text { background: #f8f8ff; border-right: none; }
+    .form-control, .form-select { border-left: none; }
+    .form-control:focus, .form-select:focus { border-color: #6C63FF; box-shadow: 0 0 0 .2rem rgba(108,99,255,.15); }
+    .password-bar { height: 4px; border-radius: 2px; transition: all .3s; }
+</style>
+}
+
+<div class="admin-sidebar d-none d-lg-block">
+    <div class="px-3 pb-2 mb-2 border-bottom border-indigo-800">
+        <span class="text-white fw-bold"><i class="bi bi-shield-lock-fill me-2" style="color:#6C63FF"></i>Admin Panel</span>
+    </div>
+    <nav class="nav flex-column">
+        <a class="nav-link active" href="@Url.Action("Index","AdminUsers")">
+            <i class="bi bi-people me-2"></i>Users
+        </a>
+        <a class="nav-link" href="@Url.Action("Index","AdminRoles")">
+            <i class="bi bi-tags me-2"></i>Roles
+        </a>
+        <hr class="border-secondary mx-3 my-2" />
+        <a class="nav-link" href="@Url.Action("Index","Home")">
+            <i class="bi bi-shop me-2"></i>Back to Store
+        </a>
+    </nav>
+</div>
+
+<div class="admin-content">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="@Url.Action("Index","AdminUsers")" class="text-decoration-none" style="color:#6C63FF">Users</a></li>
+            <li class="breadcrumb-item active">Create User</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card form-card p-4">
+                <h5 class="fw-bold mb-1"><i class="bi bi-person-plus me-2" style="color:#6C63FF"></i>Create New User</h5>
+                <p class="text-muted small mb-4">Account will be created via AuthApi. Password is hashed by BCrypt at work factor 12.</p>
+
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert alert-danger py-2 small">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        @Html.ValidationSummary(false, null, new { @class = "mb-0" })
+                    </div>
+                }
+
+                <form asp-action="Create" asp-controller="AdminUsers" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <!-- Personal Info -->
+                    <p class="section-label mb-2">Personal Information</p>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label small fw-medium"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
+                                <input asp-for="FirstName" class="form-control" placeholder="John" />
+                            </div>
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label small fw-medium"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
+                                <input asp-for="LastName" class="form-control" placeholder="Smith" />
+                            </div>
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-7">
+                            <label asp-for="Email" class="form-label small fw-medium"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
+                                <input asp-for="Email" class="form-control" placeholder="john@example.com" id="emailInput" />
+                            </div>
+                            <div id="emailStatus" class="small mt-1"></div>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-5">
+                            <label asp-for="PhoneNumber" class="form-label small fw-medium">
+                                Phone <span class="text-muted fw-normal">(optional)</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-telephone text-muted"></i></span>
+                                <input asp-for="PhoneNumber" class="form-control" placeholder="+1 555 000 0000" />
+                            </div>
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <p class="section-label mb-2">Password</p>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label small fw-medium"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock text-muted"></i></span>
+                                <input asp-for="Password" type="password" class="form-control"
+                                       placeholder="Min 8 chars" id="pwdInput" autocomplete="new-password" />
+                                <button type="button" class="btn btn-outline-secondary border-start-0"
+                                        onclick="togglePwd('pwdInput',this)"><i class="bi bi-eye"></i></button>
+                            </div>
+                            <div class="mt-1">
+                                <div class="progress" style="height:4px">
+                                    <div id="strengthBar" class="progress-bar password-bar" style="width:0%"></div>
+                                </div>
+                                <div id="strengthLabel" class="text-muted mt-1" style="font-size:.7rem"></div>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmPassword" class="form-label small fw-medium"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock-fill text-muted"></i></span>
+                                <input asp-for="ConfirmPassword" type="password" class="form-control"
+                                       placeholder="Repeat password" id="cpwdInput" autocomplete="new-password" />
+                                <button type="button" class="btn btn-outline-secondary border-start-0"
+                                        onclick="togglePwd('cpwdInput',this)"><i class="bi bi-eye"></i></button>
+                            </div>
+                            <div id="matchStatus" class="small mt-1"></div>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- Role -->
+                    <!-- Role -->
+                    <p class="section-label mb-2">Initial Role</p>
+
+                    <div class="mb-4">
+
+                        <label asp-for="InitialRole" class="form-label small fw-medium"></label>
+
+                        <select asp-for="InitialRole" class="form-select">
+
+                            <option value="">Customer (default)</option>
+
+                            @foreach (var role in Model.AvailableRoles)
+                            {
+                                <option value="@role.Name">
+                                    @role.Name
+                                </option>
+                            }
+
+                        </select>
+
+                        <span asp-validation-for="InitialRole" class="text-danger small"></span>
+
+                        <div class="form-text">
+                            Customer role is assigned automatically. Selecting another role adds additional permissions.
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn text-white fw-medium px-4" style="background:#6C63FF">
+                            <i class="bi bi-person-plus me-2"></i>Create User
+                        </button>
+                        <a href="@Url.Action("Index","AdminUsers")" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function togglePwd(id, btn) {
+        const i = document.getElementById(id);
+        const ic = btn.querySelector('i');
+        i.type = i.type === 'password' ? 'text' : 'password';
+        ic.className = i.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+    }
+
+    document.getElementById('pwdInput').addEventListener('input', function () {
+        const v = this.value, bar = document.getElementById('strengthBar'), lbl = document.getElementById('strengthLabel');
+        let s = 0;
+        if (v.length >= 8) s++; if (/[A-Z]/.test(v)) s++; if (/[a-z]/.test(v)) s++; if (/\d/.test(v)) s++; if (/[^A-Za-z0-9]/.test(v)) s++;
+        const cfg = [['0%','',''],['25%','bg-danger','⚠️ Very weak'],['50%','bg-warning','⚡ Weak'],['75%','bg-info','👍 Good'],['90%','bg-primary','💪 Strong'],['100%','bg-success','🔒 Very strong']];
+        bar.style.width = cfg[s][0]; bar.className = `progress-bar password-bar ${cfg[s][1]}`; lbl.textContent = cfg[s][2];
+        checkMatch();
+    });
+
+    function checkMatch() {
+        const pw = document.getElementById('pwdInput').value;
+        const cp = document.getElementById('cpwdInput').value;
+        const d  = document.getElementById('matchStatus');
+        if (!cp) { d.textContent = ''; return; }
+        d.innerHTML = pw === cp
+            ? '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Passwords match</span>'
+            : '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Passwords do not match</span>';
+    }
+    document.getElementById('cpwdInput').addEventListener('input', checkMatch);
+
+    let emailTimer;
+    document.getElementById('emailInput').addEventListener('input', function () {
+        clearTimeout(emailTimer);
+        const email = this.value.trim(), status = document.getElementById('emailStatus');
+        if (email.indexOf('@@') < 0) { status.innerHTML = ''; return; }
+        status.innerHTML = '<span class="text-muted"><i class="bi bi-hourglass-split me-1"></i>Checking...</span>';
+        emailTimer = setTimeout(async () => {
+            try {
+                const r = await fetch(`/Account/CheckEmail?email=${encodeURIComponent(email)}`);
+                const d = await r.json();
+                status.innerHTML = d.available
+                    ? '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Available</span>'
+                    : '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Already registered</span>';
+            } catch(e) { status.innerHTML = ''; }
+        }, 500);
+    });
+</script>
+}

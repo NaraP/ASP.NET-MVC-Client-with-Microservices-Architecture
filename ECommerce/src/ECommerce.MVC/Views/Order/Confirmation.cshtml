@@ -1,0 +1,95 @@
+@model OrderConfirmationViewModel
+@{
+    ViewData["Title"] = "Order Confirmed!";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+
+        <!-- Success Banner -->
+        <div class="card border-0 mb-4" style="background: linear-gradient(135deg, #6C63FF, #3f3d8b); color: white; border-radius: 20px;">
+            <div class="card-body text-center py-5">
+                <div class="mb-3">
+                    <span style="font-size: 4rem;">✅</span>
+                </div>
+                <h2 class="fw-bold mb-2">Order Confirmed!</h2>
+                <p class="mb-0 opacity-75">Thank you for your purchase. Your order is being processed.</p>
+            </div>
+        </div>
+
+        <!-- Order & Payment Reference -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row g-3 text-center">
+                    <div class="col-md-6 border-end">
+                        <p class="text-muted small mb-1">Order ID</p>
+                        <h5 class="fw-bold text-primary mb-0">@Model.OrderId</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="text-muted small mb-1">Payment Reference</p>
+                        <h5 class="fw-bold text-success mb-0" style="font-size: .95rem;">@Model.PaymentReference</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery Info -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3"><i class="bi bi-truck text-primary me-2"></i>Delivery Information</h6>
+                <div class="row g-3">
+                    <div class="col-sm-4 text-center">
+                        <div class="rounded-3 p-3" style="background:#f0eeff;">
+                            <i class="bi bi-check-circle-fill text-primary mb-2" style="font-size:1.5rem;"></i>
+                            <div class="small fw-medium">Order Placed</div>
+                            <div class="text-muted" style="font-size:.75rem;">@Model.PlacedAt.ToString("MMM dd, yyyy")</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4 text-center">
+                        <div class="rounded-3 p-3" style="background:#f0eeff;">
+                            <i class="bi bi-box-seam text-primary mb-2" style="font-size:1.5rem;"></i>
+                            <div class="small fw-medium">Processing</div>
+                            <div class="text-muted" style="font-size:.75rem;">Within 24 hours</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4 text-center">
+                        <div class="rounded-3 p-3" style="background:#f0eeff;">
+                            <i class="bi bi-house-door text-primary mb-2" style="font-size:1.5rem;"></i>
+                            <div class="small fw-medium">Est. Delivery</div>
+                            <div class="text-muted" style="font-size:.75rem;">@Model.EstimatedDelivery.ToString("MMM dd, yyyy")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Badge -->
+        <div class="card mb-4">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="text-muted small mb-1">Order Status</p>
+                    <span class="badge bg-success px-3 py-2 fs-6">
+                        <i class="bi bi-check2-circle me-1"></i>@Model.Status
+                    </span>
+                </div>
+                <div class="text-end">
+                    <p class="text-muted small mb-1">Payment</p>
+                    <span class="badge bg-success px-3 py-2 fs-6">
+                        <i class="bi bi-credit-card me-1"></i>Paid
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex gap-3 justify-content-center">
+            <a href="@Url.Action("Index","Home")" class="btn btn-brand px-4">
+                <i class="bi bi-grid me-2"></i>Continue Shopping
+            </a>
+            <button onclick="window.print()" class="btn btn-outline-secondary px-4">
+                <i class="bi bi-printer me-2"></i>Print Receipt
+            </button>
+        </div>
+
+    </div>
+</div>

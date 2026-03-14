@@ -1,0 +1,208 @@
+@model RoleListViewModel
+@{
+    ViewData["Title"] = "Role Management";
+    var roleColors = new Dictionary<string, string>
+    {
+        ["Admin"] = "danger",
+        ["Manager"] = "success",
+        ["Support"] = "warning",
+        ["Customer"] = "primary"
+    };
+    var roleIcons = new Dictionary<string, string>
+    {
+        ["Admin"] = "bi-shield-fill-check",
+        ["Manager"] = "bi-briefcase-fill",
+        ["Support"] = "bi-headset",
+        ["Customer"] = "bi-person-fill"
+    };
+}
+
+@section Styles {
+    <style>
+        .admin-sidebar {
+            width: 220px;
+            min-height: calc(100vh - 60px);
+            background: #1e1b4b;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            z-index: 100;
+            padding-top: 1rem;
+        }
+
+            .admin-sidebar .nav-link {
+                color: #a5b4fc;
+                padding: .6rem 1.2rem;
+                border-radius: 8px;
+                margin: 2px 8px;
+            }
+
+                .admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active {
+                    background: #6C63FF;
+                    color: #fff;
+                }
+
+        .admin-content {
+            margin-left: 220px;
+        }
+
+        .role-card {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 2px 14px rgba(0,0,0,.07);
+            transition: transform .2s, box-shadow .2s;
+        }
+
+            .role-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 6px 22px rgba(0,0,0,.12);
+            }
+
+        .role-icon-wrap {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .user-count-badge {
+            font-size: .7rem;
+            padding: .25em .6em;
+            border-radius: 20px;
+        }
+    </style>
+}
+
+<div class="admin-sidebar d-none d-lg-block">
+    <div class="px-3 pb-2 mb-2 border-bottom border-indigo-800">
+        <span class="text-white fw-bold"><i class="bi bi-shield-lock-fill me-2" style="color:#6C63FF"></i>Admin Panel</span>
+    </div>
+    <nav class="nav flex-column">
+        <a class="nav-link" href="@Url.Action("Index", "AdminUsers")">
+            <i class="bi bi-people me-2"></i>Users
+        </a>
+        <a class="nav-link active" href="@Url.Action("Index", "AdminRoles")">
+            <i class="bi bi-tags me-2"></i>Roles
+        </a>
+        <hr class="border-secondary mx-3 my-2" />
+        <a class="nav-link" href="@Url.Action("Index", "Home")">
+            <i class="bi bi-shop me-2"></i>Back to Store
+        </a>
+    </nav>
+</div>
+
+<div class="admin-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1"><i class="bi bi-tags-fill me-2" style="color:#6C63FF"></i>Role Management</h4>
+            <p class="text-muted small mb-0">System roles define what users can access</p>
+        </div>
+        <a href="@Url.Action("Create", "AdminRoles")" class="btn btn-sm text-white fw-medium" style="background:#6C63FF">
+            <i class="bi bi-plus-lg me-1"></i>New Role
+        </a>
+    </div>
+
+    <!-- Role cards grid -->
+    <div class="row g-4 mb-5">
+        @foreach (var role in Model.Roles)
+        {
+            var color = roleColors.GetValueOrDefault(role.Name, "secondary");
+            var icon = roleIcons.GetValueOrDefault(role.Name, "bi-tag");
+            <div class="col-sm-6 col-xl-3">
+                <div class="card role-card p-4">
+                    <div class="d-flex align-items-start gap-3 mb-3">
+                        <div class="role-icon-wrap bg-@color bg-opacity-10">
+                            <i class="bi @icon text-@color"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="fw-bold mb-0">@role.Name</h6>
+                            <span class="badge user-count-badge bg-@color bg-opacity-10 text-@color border border-@color border-opacity-25 mt-1">
+                                @((role.UserCount ?? 0)) user@((role.UserCount ?? 0) == 1 ? "" : "s")
+                            </span>
+                        </div>
+                        <span class="badge bg-@(role.IsActive ? "success" : "secondary") bg-opacity-15 text-@(role.IsActive ? "success" : "secondary") border border-opacity-25" style="font-size:.65rem">
+                            @(role.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-3" style="min-height:2.4rem">
+                        @(string.IsNullOrEmpty(role.Description) ? "No description provided." : role.Description)
+                    </p>
+                    <a href="@Url.Action("Index", "AdminUsers", new { filterRole = role.Name })"
+                       class="btn btn-sm btn-outline-@color">
+                        <i class="bi bi-people me-1"></i>View Users
+                    </a>
+                </div>
+            </div>
+        }
+
+        @if (!Model.Roles.Any())
+        {
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="bi bi-tags fs-1 d-block mb-2 opacity-25"></i>
+                No roles defined yet.
+            </div>
+        }
+    </div>
+
+    <!-- Permissions reference table -->
+    <div class="card" style="border-radius:14px;border:none;box-shadow:0 2px 12px rgba(0,0,0,.07)">
+        <div class="card-header bg-transparent border-bottom fw-bold py-3">
+            <i class="bi bi-table me-2" style="color:#6C63FF"></i>Permissions Reference
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0 small">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Permission</th>
+                        @foreach (var role in Model.Roles)
+                        {
+                            var c = roleColors.GetValueOrDefault(role.Name, "secondary");
+                            <th class="text-center">
+                                <span class="badge bg-@c bg-opacity-15 text-@c border border-@c border-opacity-25 px-2">@role.Name</span>
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var perms = new[]
+                        {
+                                        ("Browse products",          new[]{ true,  true,  true,  true  }),
+                                        ("Add to cart / checkout",   new[]{ false, false, false, true  }),
+                                        ("View own orders",          new[]{ false, false, false, true  }),
+                                        ("View all orders",          new[]{ true,  true,  true,  false }),
+                                        ("Manage inventory",         new[]{ true,  true,  false, false }),
+                                        ("View support tickets",     new[]{ true,  true,  true,  false }),
+                                        ("Manage users & roles",     new[]{ true,  false, false, false }),
+                                        ("Create / delete roles",    new[]{ true,  false, false, false }),
+                                        };
+                        // Reorder columns to match Model.Roles order
+                        var roleOrder = new[] { "Admin", "Manager", "Support", "Customer" };
+                    }
+                    @foreach (var (perm, access) in perms)
+                    {
+                        <tr>
+                            <td class="ps-3 fw-medium">@perm</td>
+                            @for (int i = 0; i < Math.Min(Model.Roles.Count, access.Length); i++)
+                            {
+                                <td class="text-center">
+                                    @if (access[i])
+                                    {
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-dash text-muted opacity-50"></i>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

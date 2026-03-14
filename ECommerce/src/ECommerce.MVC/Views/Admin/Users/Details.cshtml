@@ -1,0 +1,119 @@
+@model UserDetailsViewModel
+@{
+    ViewData["Title"] = "User Details";
+    var roleColors = new Dictionary<string, string> {
+        ["Admin"]="danger",["Manager"]="success",["Support"]="warning",["Customer"]="primary"
+    };
+    var primary  = Model.Roles.FirstOrDefault() ?? "Customer";
+    var avatarBg = roleColors.GetValueOrDefault(primary, "secondary");
+    var initials = string.Concat(Model.User.FullName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString() : ""));
+}
+
+@section Styles {
+<style>
+    .admin-sidebar {
+        width: 220px; min-height: calc(100vh - 60px);
+        background: #1e1b4b; position: fixed; top: 60px; left: 0; z-index: 100;
+        padding-top: 1rem;
+    }
+    .admin-sidebar .nav-link { color: #a5b4fc; padding: .6rem 1.2rem; border-radius: 8px; margin: 2px 8px; }
+    .admin-sidebar .nav-link:hover, .admin-sidebar .nav-link.active { background: #6C63FF; color: #fff; }
+    .admin-content { margin-left: 220px; }
+    .detail-label { font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #9ca3af; }
+    .detail-value { font-size: .95rem; font-weight: 500; color: #1e1b4b; }
+    .user-avatar-xl { width: 72px; height: 72px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700; color: #fff; }
+    .info-card { border-radius: 14px; border: none; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+</style>
+}
+
+<div class="admin-sidebar d-none d-lg-block">
+    <div class="px-3 pb-2 mb-2 border-bottom border-indigo-800">
+        <span class="text-white fw-bold"><i class="bi bi-shield-lock-fill me-2" style="color:#6C63FF"></i>Admin Panel</span>
+    </div>
+    <nav class="nav flex-column">
+        <a class="nav-link active" href="@Url.Action("Index","AdminUsers")">
+            <i class="bi bi-people me-2"></i>Users
+        </a>
+        <a class="nav-link" href="@Url.Action("Index","AdminRoles")">
+            <i class="bi bi-tags me-2"></i>Roles
+        </a>
+        <hr class="border-secondary mx-3 my-2" />
+        <a class="nav-link" href="@Url.Action("Index","Home")">
+            <i class="bi bi-shop me-2"></i>Back to Store
+        </a>
+    </nav>
+</div>
+
+<div class="admin-content">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="@Url.Action("Index","AdminUsers")" class="text-decoration-none" style="color:#6C63FF">Users</a></li>
+            <li class="breadcrumb-item active">@Model.User.FullName</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Profile card -->
+        <div class="col-md-4">
+            <div class="card info-card p-4 text-center">
+                <div class="user-avatar-xl bg-@avatarBg mx-auto mb-3">@initials</div>
+                <h5 class="fw-bold mb-1">@Model.User.FullName</h5>
+                <p class="text-muted small mb-3">@Model.User.Email</p>
+
+                @if (Model.User.IsActive)
+                {
+                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 mb-3">
+                        <i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>Active Account
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-25 mb-3">
+                        <i class="bi bi-circle me-1" style="font-size:.5rem"></i>Inactive Account
+                    </span>
+                }
+
+                <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+                    @foreach (var role in Model.Roles)
+                    {
+                        var c = roleColors.GetValueOrDefault(role, "secondary");
+                        <span class="badge bg-@c bg-opacity-15 text-@c border border-@c border-opacity-25 px-3 py-2">
+                            <i class="bi bi-shield-check me-1"></i>@role
+                        </span>
+                    }
+                </div>
+
+                <a href="@Url.Action("Edit","AdminUsers",new{id=Model.User.Id})"
+                   class="btn btn-sm text-white w-100" style="background:#6C63FF">
+                    <i class="bi bi-pencil me-1"></i>Edit User
+                </a>
+            </div>
+        </div>
+
+        <!-- Details -->
+        <div class="col-md-8">
+            <div class="card info-card p-4">
+                <h6 class="fw-bold mb-4"><i class="bi bi-person-lines-fill me-2" style="color:#6C63FF"></i>Account Details</h6>
+
+                <div class="row g-4">
+                    @foreach (var (label, value) in new[]{
+                        ("User ID",      Model.User.Id),
+                        ("Full Name",    Model.User.FullName),
+                        ("Email",        Model.User.Email),
+                        ("Phone",        string.IsNullOrEmpty(Model.User.PhoneNumber) ? "—" : Model.User.PhoneNumber),
+                        ("Member Since", Model.User.CreatedAt.ToString("MMMM d, yyyy")),
+                        ("Last Login",   Model.User.LastLoginAt.HasValue ? Model.User.LastLoginAt.Value.ToString("MMMM d, yyyy HH:mm") : "Never"),
+                        ("Status",       Model.User.IsActive ? "Active" : "Inactive"),
+                        ("Roles",        Model.Roles.Any() ? string.Join(", ", Model.Roles) : "None"),
+                    })
+                    {
+                        <div class="col-sm-6">
+                            <div class="detail-label mb-1">@label</div>
+                            <div class="detail-value">@value</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
